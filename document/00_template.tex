@@ -1,0 +1,161 @@
+\setcounter{chapter}{1}
+\chapter{Le langage Assembleur}
+
+\section*{Introduction}
+
+Dans ce chapitre, il faut rendre les exercices 2.2, 2.3, 2.9 et un exercice au choix. L'exercice 2.10 est un bonus pour les plus audacieux.
+
+\section{Exercice 2.2 (A rendre)}
+
+\subsection{Question}
+Écrivez en assembleur une fonction delta() qui renvoie b\textsuperscript{2} − 4ac calculée avec quatre variables globales a, b, c et delta. Expliquez.
+
+N'oubliez pas d'écrire également le programme C appelant et d'insérer les copies d'écran (ou textuelles) commentées avec deux ou trois exemples distincts.
+
+\subsection{Développement}
+Pour mener à bien cet exercice, nous avons adopté le processus suivant :
+
+Le but est de calculer le discriminant d'une équation du second degré : $\Delta = b^2 - 4ac$.
+Pour ce faire, nous utilisons une architecture \textbf{x86 32 bits}. L'interaction entre le langage C et l'Assembleur se fait via des \textbf{variables globales}.
+
+\begin{itemize}
+    \item \textbf{Le programme C} : Il déclare les variables en mémoire vive, leur assigne des valeurs et appelle la fonction assembleur.
+    \item \textbf{Le programme Assembleur} : Il récupère les valeurs depuis la mémoire, effectue les calculs dans les registres du processeur (\texttt{\%eax}, \texttt{\%ebx}), puis écrit le résultat final dans la variable \texttt{delta}.
+\end{itemize}
+
+\begin{enumerate}
+    \item \textbf{Création des sources :} Rédaction des fichiers \texttt{main.c} et \texttt{delta.s} avec les métadonnées et commentaires requis.
+\end{enumerate}
+
+\subsubsection*{Fichier Assembleur (\texttt{delta.s})}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/fichier_assembleur.png} 
+    \caption{Extrait du code source de delta.s commenté}
+    \label{fig:code_delta}
+\end{figure}
+
+Nous utilisons la syntaxe \textbf{AT\&T}. Notez l'utilisation de \texttt{pushl} et \texttt{popl} pour protéger le registre \texttt{\%ebx}, garantissant la stabilité du programme.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/fichier_main.png} 
+    \caption{Extrait du code source de main.c commenté}
+    \label{fig:code_main}
+\end{figure}
+
+\subsubsection*{Compilation et exécution}
+
+\noindent\textit{Note :} Pour compiler sur un système moderne (comme Kali Linux), nous devons forcer le mode 32 bits et autoriser l'accès aux variables globales simples.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/cmd2_2.png} 
+    \caption{Commande de compilation et exécution}
+    \label{fig:cmd_compile}
+\end{figure}
+
+\noindent\textit{Commentaires :} Il manquait une ligne à la fin de mon fichier \texttt{delta.s}. J'ai donc rajouté \texttt{.end}. Pour enlever l'avertissement \texttt{DT\_TEXTREL}, j'ai rajouté une option à ma commande :
+
+\begin{verbatim}
+gcc -m32 -no-pie main.c delta.s -o 2.2
+./2.2
+\end{verbatim}
+
+\subsubsection*{Réponse et analyse des résultats}
+
+Voici la capture textuelle du résultat après exécution du programme :
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/res2_2.png} 
+    \caption{Résultat de l'exécution du programme}
+    \label{fig:resultat_exec}
+\end{figure}
+
+\paragraph*{Interprétation :}
+
+\begin{itemize}
+    \item \textbf{Exemple 1 ($\Delta = 9$)} : Le résultat est positif. Mathématiquement, cela signifie que l'équation possède \textbf{deux racines réelles} distinctes.
+    \item \textbf{Exemple 2 ($\Delta = 0$)} : Le résultat est nul. Cela signifie que l'équation possède \textbf{une racine double} (le sommet de la parabole touche l'axe des abscisses).
+    \item \textbf{Exemple 3 ($\Delta = -48$)} : Le résultat est négatif. L'équation ne possède \textbf{aucune racine réelle}.
+\end{itemize}
+
+\section{Exercice 2.3 (A rendre)}
+\subsection{Question}
+Écrivez en assembleur une fonction médian3 qui reçoit trois arguments et renvoie celui qui n'est ni le plus grand, ni le plus petit.
+
+\textbf{Remarque :} La fonction est utile dans Quick Sort pour choisir le pivot entre le premier élément, le dernier et celui du milieu.
+
+\textbf{Note :} N'oubliez pas d'écrire également le programme C appelant et d'insérer les copies d'écran (ou textuelles) commentées avec deux ou trois exemples distincts.
+
+\subsection{Développement}
+La fonction median3 a pour but d'extraire la valeur centrale parmi trois entiers ($a$, $b$, et $c$). Contrairement à un tri complet qui nécessiterait d'ordonner les trois éléments, trouver la médiane ne demande que quelques comparaisons logiques.
+
+En algorithmique, on utilise un arbre de décision. L'idée est la suivante : on compare $a$ et $b$. Selon le résultat, on compare le troisième élément ($c$) avec les deux autres pour situer lequel est "au milieu".
+
+Cette méthode est cruciale dans l'algorithme Quick Sort : choisir la médiane comme "pivot" permet d'éviter les pires cas de performance (complexité $O(n^2)$) lorsque le tableau est déjà presque trié.
+
+Les arguments arrivent dans les registres \texttt{\%rdi}, \texttt{\%rsi}, et \texttt{\%rdx}. Le résultat est renvoyé dans \texttt{\%rax}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/median3_assembleur.png} 
+    \caption{Nous utilisons la syntaxe AT\&T. Le résultat est renvoyé dans \texttt{\%rax}}
+    \label{fig:code_median3_assembleur}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/median3_c.png} 
+    \caption{Extrait du code source de main.c commenté . Ce fichier permet de tester la fonction avec différents scénarios}
+    \label{fig:code_main_median3_c}
+\end{figure}
+
+\subsubsection*{Compilation et exécution}   
+Pour compiler et exécuter le programme, nous utilisons les commandes suivantes :
+
+\begin{verbatim}
+ gcc -o exo2.3 median.c median3.s
+./exo2.3
+\end{verbatim}
+
+\subsubsection*{Réponse et analyse des résultats}
+Voici la capture textuelle du résultat après exécution du programme :
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/res2_3.png} 
+    \caption{Résultat de l'exécution du programme}
+    \label{fig:resultat_exec_median3}
+\end{figure}
+\paragraph*{Interprétation :}
+
+\begin{itemize}
+    \item \textbf{Exemple 1 (Médiane = 20)} : Les valeurs $10$, $20$, et $30$ sont fournies. La médiane correcte est $20$.
+    \item \textbf{Exemple 2 (Médiane = 25)} : Les valeurs $25$, $10$, et $30$ sont fournies. La médiane correcte est $25$.
+    \item \textbf{Exemple 3 (Médiane = 25)} : Les valeurs $10$, $40$, et $25$ sont fournies. La médiane correcte est $25$.
+\end{itemize}
+
+L'implémentation est efficace car elle n'utilise que les registres processeurs, évitant ainsi les accès lents à la mémoire RAM. Le passage par les étiquettes (labels) permet de ne réaliser que 2 à 3 comparaisons au maximum par appel, ce qui est optimal pour une intégration dans un algorithme de tri haute performance comme Quick Sort.
+
+\section{Exercice 2.4 (Au choix mais a rendre)}
+
+
+
+\section {Exercice 2.9 (A rendre)}
+
+
+
+\chapter{Comprendre un programme compilé en C}
+
+\section{Analyse}
+% Votre réponse ici
+
+\chapter{L'analyse Lexicale et Syntaxique}
+
+\section{Exercices}
+% Votre réponse ici
+
+\chapter{Utilisation du compilateur Yacc}
+
+\section{Code et Explications}
+% Votre réponse ici
