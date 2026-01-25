@@ -3,7 +3,7 @@ MAIN=main
 PDF=$(MAIN).pdf
 TEX=$(MAIN).tex
 ENGINE=xelatex
-OPTS=-output-directory=$(WORKDIR) --jobname="$(MAIN)"
+OPTS=-output-directory=$(WORKDIR) --jobname="$(MAIN)" 
 
 SRC=src
 CONTENT=$(SRC)/content.tex
@@ -33,10 +33,10 @@ content:
 .Phony: triple
 triple:
 	@mkdir -p $(WORKDIR)
-	$(ENGINE) $(OPTS) $(TEX)
-	biber $(WORKDIR)/$(MAIN)
-	$(ENGINE) $(OPTS) $(TEX)
-	$(ENGINE) $(OPTS) $(TEX)
+	-$(ENGINE) $(OPTS) $(TEX)
+	-biber $(WORKDIR)/$(MAIN)
+	-$(ENGINE) $(OPTS) $(TEX)
+	-$(ENGINE) $(OPTS) $(TEX)
 
 .Phony: pdf
 pdf:

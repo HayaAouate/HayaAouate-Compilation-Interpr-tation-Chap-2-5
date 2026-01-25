@@ -98,35 +98,41 @@ En algorithmique, on utilise un arbre de décision. L'idée est la suivante : on
 Cette méthode est cruciale dans l'algorithme Quick Sort : choisir la médiane comme "pivot" permet d'éviter les pires cas de performance (complexité $O(n^2)$) lorsque le tableau est déjà presque trié.
 
 Les arguments arrivent dans les registres \texttt{\%rdi}, \texttt{\%rsi}, et \texttt{\%rdx}. Le résultat est renvoyé dans \texttt{\%rax}.
+
+\subsubsection*{Code source}
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{images/median3_assembleur.png} 
     \caption{Nous utilisons la syntaxe AT\&T. Le résultat est renvoyé dans \texttt{\%rax}}
     \label{fig:code_median3_assembleur}
 \end{figure}
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{images/median3_c.png} 
-    \caption{Extrait du code source de main.c commenté . Ce fichier permet de tester la fonction avec différents scénarios}
+    \caption{Extrait du code source de main.c commenté. Ce fichier permet de tester la fonction avec différents scénarios}
     \label{fig:code_main_median3_c}
 \end{figure}
 
 \subsubsection*{Compilation et exécution}   
+
 Pour compiler et exécuter le programme, nous utilisons les commandes suivantes :
 
 \begin{verbatim}
- gcc -o exo2.3 median.c median3.s
+gcc -o exo2.3 median.c median3.s
 ./exo2.3
 \end{verbatim}
 
-\subsubsection*{Réponse et analyse des résultats}
-Voici la capture textuelle du résultat après exécution du programme :
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{images/res2_3.png} 
     \caption{Résultat de l'exécution du programme}
     \label{fig:resultat_exec_median3}
 \end{figure}
+
+\subsubsection*{Réponse et analyse des résultats}
+
 \paragraph*{Interprétation :}
 
 \begin{itemize}
@@ -137,23 +143,369 @@ Voici la capture textuelle du résultat après exécution du programme :
 
 L'implémentation est efficace car elle n'utilise que les registres processeurs, évitant ainsi les accès lents à la mémoire RAM. Le passage par les étiquettes (labels) permet de ne réaliser que 2 à 3 comparaisons au maximum par appel, ce qui est optimal pour une intégration dans un algorithme de tri haute performance comme Quick Sort.
 
-\section{Exercice 2.4 (Au choix mais a rendre)}
+\section{Exercice 2.4 (Au choix mais à rendre)}
 
+\subsection{Question}
+Écrivez en assembleur une fonction \texttt{myStrLen} équivalente à la fonction C \texttt{strlen()}.
 
+\textbf{Rappel :} pour n'accéder qu'à un seul octet, il faut postfixer l'instruction avec \texttt{b} (byte) au lieu de \texttt{l} (long). Vous aurez à utiliser \texttt{cmpb}.
 
-\section {Exercice 2.9 (A rendre)}
+\subsection{Développement}
+\texttt{cmpb \$0, (\%edx)} : C'est l'instruction clé. \texttt{cmpb} signifie "compare byte" (comparer un octet). On regarde si le caractère actuel est le zéro binaire qui termine toutes les chaînes en C.
 
+\texttt{incl \%eax} : Chaque fois qu'on trouve un caractère qui n'est pas zéro, on ajoute 1 à notre compteur.
 
+\texttt{incl \%edx} : On avance le pointeur dans la mémoire pour lire le caractère suivant.
+
+Le résultat : En C, par convention, la valeur de retour d'une fonction doit toujours se trouver dans le registre \texttt{\%eax}. C'est pour cela qu'on utilise \texttt{\%eax} comme compteur.
+
+\subsubsection*{Code source}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/mystrlen_assem.png} 
+    \caption{Extrait du code source de myStrLen.s commenté}
+    \label{fig:code_mystrlen_assembleur}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/mystrlen_c.png} 
+    \caption{Extrait du code source de main.c commenté. Ce fichier permet de tester la fonction avec différents scénarios}
+    \label{fig:code_main_mystrlen_c}
+\end{figure}
+
+\subsubsection*{Compilation et exécution}
+
+On utilise les mêmes commandes que tout à l'heure pour compiler et exécuter le programme :
+\begin{verbatim}
+gcc -m32 -o exo2.4 myStrLen.c myStrLen.s
+./exo2.4
+\end{verbatim}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/res2_4.png} 
+    \caption{Commande de compilation et exécution}
+    \label{fig:cmd_compile_mystrlen}
+\end{figure}
+
+\subsubsection*{Réponse et analyse des résultats}
+
+L'implémentation de \texttt{myStrLen} illustre la communication directe entre le processeur et la mémoire :
+
+\textbf{Parcours Mémoire :} La fonction traite une chaîne comme une succession d'octets. Le registre \texttt{\%edx} sert de pointeur mobile jusqu'à la rencontre du caractère nul (\textbackslash0).
+
+\textbf{Précision Chirurgicale (\texttt{cmpb}) :} L'usage de \texttt{cmpb} montre comment l'assembleur manipule les données à l'échelle de l'octet, l'unité de base du type \texttt{char}.
+
+\textbf{Lien C/Assembleur :} L'utilisation de \texttt{\%eax} pour stocker le compteur final respecte la convention d'appel x86, permettant au programme C de récupérer automatiquement la longueur calculée.
+
+Cet exercice démontre qu'une fonction simple en C repose sur une gestion rigoureuse des registres et de la pile en assembleur pour garantir la stabilité du système.
+\section{Exercice 2.9 (A rendre)}
+
+\subsection{Question}
+
+\begin{center}
+    \includegraphics[width=0.85\textwidth]{images/quest2_9.png}
+    \captionof{figure}{Exercice 2.9}
+    \label{fig:exo2_9}
+\end{center}
+
+\subsection{Développement}
+Ce code assembleur implémente la formule géométrique de Héron pour calculer l’aire d’un triangle à partir de ses trois côtés. Voici la traduction en C, expliquée ligne par ligne :
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/heron_c.png} 
+    \caption{Traduction en C de l'exercice 2.9}
+    \label{fig:code_exo2_9_c}
+\end{figure}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/heron_assem.png} 
+    \caption{Code assembleur de l'exercice 2.9}
+    \label{fig:code_exo2_9_assem}
+\end{figure}
+
+\subsubsection*{Réponse et analyse des résultats}
+\paragraph*{Interprétation :}
+L'exercice démontre la capacité de l'assembleur à manipuler des structures de calcul simples et des opérations arithmétiques pour répondre à des besoins mathématiques. Il souligne l'importance de la gestion des registres "callee-saved" (comme \texttt{\%ebx}) pour garantir que l'appel depuis le langage C ne provoque pas d'instabilité système. L'utilisation de \texttt{negl} et de \texttt{sarl} montre également comment l'assembleur optimise les opérations mathématiques (négation et division par deux) au niveau du processeur.
+
+\subsubsection*{Compilation et exécution}   
+
+Pour compiler et exécuter le programme, nous utilisons les commandes suivantes :
+
+\begin{verbatim}
+ gcc -m32 -o heron_test  heron.c heron.s
+./heron_test
+\end{verbatim}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/res2.9.png} 
+    \caption{Résultat de l'exécution du programme}
+    \label{fig:resultat_exec_heron}
+\end{figure}
 
 \chapter{Comprendre un programme compilé en C}
 
-\section{Analyse}
-% Votre réponse ici
+\section*{Introduction}
 
-\chapter{L'analyse Lexicale et Syntaxique}
+Pour ce troisième chapitre, vous devez rendre trois exercices au choix. L'exercice 3.6 est un Bonus ou un Super Bonus.
 
-\section{Exercices}
-% Votre réponse ici
+
+\section{Exercice 3.1 (A choix (obligé))}
+\subsection{Question}
+Examinez le code produit par le compilateur quand il compile la fonction suivante :
+
+\begin{verbatim}
+void foo() {
+    if (0 == 1)
+        printf("Hello\n"); // jamais exécuté
+}
+\end{verbatim}
+
+En faisant varier le niveau d'optimisation de la compilation sous GCC, l'appel à la fonction \texttt{printf} est-il encore dans le code ?
+
+Et la chaîne de caractère \texttt{"Hello"} ?
+
+\textbf{Note :} N'oubliez pas d'insérer les copies d'écran (ou textuelles) commentées avec les lignes de compilation. Pour plus de lisibilité, vous pouvez surligner les parties intéressantes du code produit.
+
+\subsection{Développement}
+Pour observer l'effet des optimisations, le même code C est compilé en assembleur avec deux niveaux : sans optimisation (\texttt{-O0}) et avec optimisation (\texttt{-O2}).
+
+\begin{verbatim}
+gcc -O0 -S foo.c -o foo_O0.s
+gcc -O2 -S foo.c -o foo_O2.s
+\end{verbatim}
+
+Le code source utilisé est illustré ci-dessous :
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/foo_c.png}
+    \caption{Code source de foo.c}
+    \label{fig:code_foo_c}
+\end{figure}
+
+Les deux assemblages générés sont comparés ci-après :
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/foo_assemb.png}
+    \caption{Assemblage obtenu avec \texttt{-O0} et \texttt{-O2}}
+    \label{fig:code_foo_asm}
+\end{figure}
+
+\subsubsection*{Analyse des résultats}
+\begin{itemize}
+    \item \textbf{-O0 (sans optimisation)} : le code contient l'appel à \texttt{printf} et la chaîne \texttt{"Hello"} car le compilateur ne supprime pas le code mort.
+    \item \textbf{-O2 (optimisé)} : l'appel à \texttt{printf} et la chaîne \texttt{"Hello"} sont supprimés si la condition est constante (\texttt{if (0 == 1)}), car le bloc est évalué comme inatteignable.
+    \item \textbf{Comportement attendu} : pour conserver le code dans la version optimisée, il faut empêcher le compilateur de prouver que le test est toujours faux (par exemple en utilisant une variable lue à l'exécution).
+\end{itemize}
+
+\subsection{Analyse}
+L'exercice illustre comment les optimisations du compilateur peuvent éliminer le code mort, améliorant ainsi l'efficacité du programme final. Il souligne l'importance de comprendre le comportement du compilateur pour éviter des suppressions inattendues de code, en particulier dans des contextes où certaines branches doivent être conservées pour des raisons logiques ou de débogage.
+Donc finalement, avec l'optimisation activée, l'appel à \texttt{printf} et la chaîne \texttt{"Hello"} ne sont plus présents dans le code compilé.
+
+\subsection{Exercice 3.2 (Au choix - À rendre)}
+
+\subsection{Question}
+Examinez le code produit par le compilateur quand il compile la fonction suivante :
+
+\begin{verbatim}
+void foo(int x) {
+    if (x == x + 1)
+        printf("Hello\n"); // jamais exécuté
+}
+\end{verbatim}
+
+Avec les mêmes consignes que l'exercice précédent en ce qui concerne les variations d'optimisation de la compilation sous GCC, l'appel à la fonction \texttt{printf} est-il encore dans le code ?
+
+Et aussi la chaîne de caractère \texttt{"Hello"} ?
+
+\textbf{Note :} N'oubliez pas d'insérer les copies d'écran (ou textuelles) commentées avec les lignes de compilation. Pour plus de lisibilité, vous pouvez surligner les parties intéressantes du code produit.
+
+\subsection{Développement}
+Cette variante introduit une condition symbolique : \texttt{if (x == x + 1)}. Contrairement au cas précédent, la valeur de \texttt{x} n'est pas connue à l'avance, mais la relation logique est mathématiquement impossible pour tout entier.
+
+Voici les commandes pour compiler en assembleur :
+
+\begin{verbatim}
+gcc -O0 -S foo_sec.c -o foo_sec_O0.s
+gcc -O2 -S foo_sec.c -o foo_sec_O2.s
+\end{verbatim}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/3_2.png}
+    \caption{Code source de foo\_sec.c et résultat de compilation avec \texttt{-O0}}
+    \label{fig:code_foo_sec_c}
+\end{figure}
+
+Lors de nos tests avec GCC version 14.3.0, nous avons observé que même avec l'option \texttt{-O0}, le compilateur élimine le code mort de la condition \texttt{x == x + 1}. Cela s'explique par les mécanismes d'\textit{early optimization} intégrés aux compilateurs modernes. GCC identifie l'impossibilité algébrique $x = x + 1$ dès la phase d'analyse sémantique, avant même la génération du code assembleur.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/3_2_2.png}
+    \caption{Résultat de compilation avec \texttt{-O2}}
+    \label{fig:code_foo_sec_O2}
+\end{figure}
+
+\subsubsection*{Analyse des résultats}
+
+\begin{itemize}
+    \item \textbf{La fonction printf est supprimée} : le compilateur, avec l'option \texttt{-O2}, analyse la logique mathématique. Il « sait » qu'un nombre entier ne peut jamais être égal à lui-même plus un ($x \neq x + 1$). Il en conclut que le bloc \texttt{printf} ne sera jamais exécuté.
+    \item \textbf{Cas sans optimisation} : même avec \texttt{-O0}, le compilateur reconnaît l'absurdité mathématique et supprime le code.
+    \item \textbf{Vérification dans l'assembleur} : il y a \texttt{ret} directement après l'entrée de la fonction, indiquant qu'elle se termine immédiatement sans exécuter d'autres instructions.
+\end{itemize}
+
+\subsection{Analyse}
+
+L'examen du fichier \texttt{foo\_O2.s} révèle une fonction réduite à une seule instruction \texttt{ret}.
+
+Contrairement au cas précédent où la condition était une constante (\texttt{0 == 1}), ici le compilateur GCC réalise une \textbf{simplification algébrique}. Il identifie que la relation $x = x + 1$ est une contradiction logique. En conséquence :
+
+\begin{itemize}
+    \item \textbf{L'appel à printf} est totalement éliminé du flux d'exécution.
+    \item \textbf{La chaîne "Hello"} est supprimée des ressources du programme, n'étant plus référencée.
+\end{itemize}
+
+Ce résultat confirme que l'optimisation \texttt{-O2} ne se limite pas à accélérer le code existant, mais nettoie intelligemment le programme de toute branche .
+
+\section{Exercices 3.3 (Au choix - À rendre)}
+\subsection{Question}
+La fonction snowWhite ci-dessous n’a pas besoin d’avoir sept arguments pour mettre la particularité de GCC en évidence :
+ Quel est le nombre minimum d’arguments pour apercevoir
+cette particularité ?
+✎ S’il n’y a que deux arguments, où sont-ils placés ?
+✎ S’il n’y a qu’un seul argument, où est-il placé ?
+✔ (Idem que pour les exercices précédents). Evitez de plus d’utiliser l’optimisation de GCC qui risque rendre la lecture moins aisée.
+Et pour plus de lisibilité, vous pouvez, comme à l’habitude, surligner les parties intéressantes du code produit.
+
+\subsection{Développement}
+La fonction \texttt{snowWhite} est conçue pour démontrer comment GCC gère
+
+Voici la commande de compilation utilisée pour générer le code assembleur sans optimisations :
+\begin{verbatim}
+    gcc -O0 -S snow.c -o snow.s
+cat snow.s
+\end{verbatim}
+Voici la résultat:
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/terminal3_6.png} 
+    \caption{Code assembleur généré pour snowWhite commande cli}
+    \label{fig:code_snow_assem}
+\end{figure}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/snow_assemb.png} 
+    \caption{Code assembleur généré pour snowWhite}
+    \label{fig:code_snow_assem2}
+\end{figure}
+\subsubsection*{Analyse des résultats}
+
+\subsection{Analyse de l'assemblage}
+L'examen du fichier \texttt{snow.s} permet d'identifier deux mécanismes distincts pour le passage des paramètres :
+
+\begin{itemize}
+    \item \textbf{Par registres} : Les six premiers arguments sont reçus et manipulés via les registres dédiés de l'architecture 64 bits.
+    \item \textbf{Par la pile} : À partir du septième argument, le compilateur utilise la mémoire (pile).
+\end{itemize}
+
+\begin{lstlisting}[language={[x86masm]Assembler}, caption=Passage des paramètres dans snowWhite, escapeinside={(*}{*)}]
+# --- LES 6 PREMIERS ARGUMENTS (PASSES PAR REGISTRES) ---
+movl    %edi, -4(%rbp)   # 1er arg (a) recu dans %edi
+movl    %esi, -8(%rbp)   # 2eme arg (b) recu dans %esi
+movl    %edx, -12(%rbp)  # 3eme arg (c) recu dans %edx
+movl    %ecx, -16(%rbp)  # 4eme arg (d) recu dans %ecx
+movl    %r8d, -20(%rbp)  # 5eme arg (e) recu dans %r8d
+movl    %r9d, -24(%rbp)  # 6eme arg (f) recu dans %r9d
+
+# --- LA PARTICULARITE : LE 7eme ARGUMENT (PILE) ---
+movl    16(%rbp), %edi   # Recupere 'g' (deja sur la pile a +16)
+pushq   %rdi             # (*\textbf{POUSSE 'g' sur la pile pour l'appel dwarf}*)
+                         # C'est l'argument minimum pour voir ca !
+
+movl    %eax, %edi       # Prepare 'a' pour l'appel
+call    dwarf            # Appel de la fonction
+addq    $8, %rsp         # Nettoie la pile (retire le 7eme argument)
+\end{lstlisting}
+
+\subsection{Réponses aux questions}
+
+\paragraph{Quel est le nombre minimum d’arguments pour apercevoir cette particularité ?}
+Le nombre minimum est \textbf{7}. Comme le démontre le code produit, GCC utilise les 6 registres standards (\texttt{\%edi} à \texttt{\%r9d}) conformément à l'ABI System V. Le 7ème argument ne peut plus être stocké dans un registre de paramètre et force l'utilisation de la pile mémoire via l'instruction \texttt{pushq}.
+
+\paragraph{S’il n’y a que deux arguments, où sont-ils placés ?}
+Ils sont placés exclusivement dans les deux premiers registres de la convention :
+\begin{itemize}
+    \item \texttt{\%edi} pour le premier argument.
+    \item \texttt{\%esi} pour le second argument.
+\end{itemize}
+
+\paragraph{S’il n’y a qu’un seul argument, où est-il placé ?}
+Il est placé uniquement dans le registre \textbf{\texttt{\%edi}}.
+
+\paragraph{Interprétation :}
+Cette observation confirme que l'architecture x86-64 optimise les appels de fonction en utilisant les registres (plus rapides) pour les six premiers arguments entiers, et ne sollicite la mémoire (pile) que lorsque ce quota est dépassé.
+
+\chapter{L'analyse lexicale et syntaxique}
+\section*{Introduction}
+Pour ce quatrième chapitre, vous devez rendre les exercices 4.3 et 4.11, ainsi que deux exercices au choix (l’un dans la première série d’exercices et l’autre dans la seconde), les difficultés étant variables. Les exercices au choix 4.17 et 4.18 sont pour un Bonus.
+
+\section{Exercice 4.3 (À rendre)}
+\subsection{Question}
+Modifiez le programme \texttt{dc-elem.c} pour pouvoir effectuer les autres opérations arithmétiques usuelles (soustraction, multiplication, division et modulo). Expliquez.
+
+\textbf{Note :} Commentez les lignes ajoutées et produisez deux ou trois sorties illustratives du programme modifié.
+
+\subsection{Développement}
+
+
+\subsubsection*{Code source modifié}
+% Votre code ici
+
+\subsection{Analyse des résultats}
+% Vos observations ici
+
+
+\section{Exercice 4.11 (À rendre)}
+\subsection{Question}
+Soit la grammaire :
+
+\begin{verbatim}
+p : A B
+p : A p B
+\end{verbatim}
+
+\subsubsection*{Tâches}
+\begin{itemize}
+    \item Générez à partir de cette grammaire des phrases de 2, 4, 6 et 8 mots.
+    \item Écrivez en une phrase le langage décrit par cette grammaire.
+    \item (Plus difficile) Trouvez une expression régulière pour le langage décrit par cette grammaire, ou expliquez pourquoi ce n’est pas possible.
+\end{itemize}
+
+\textbf{Note :} Dessinez l’arbre syntaxique avec le logiciel de votre choix et explicitez vos réponses.
+
+\subsection{Développement}
+\subsection{Analyse des résultats}
+
+\subsection{Exercice 4.12 (Au choix — À rendre)}
+\subsection{Question}
+Avec la grammaire ci-dessous :
+
+\begin{verbatim}
+p : /* rien */
+p : A p B p
+\end{verbatim}
+
+\subsubsection*{Tâches}
+\begin{itemize}
+    \item (Idem) Générez à partir de cette grammaire toutes les phrases de 2 mots, de 4 mots, de 6 mots.
+\end{itemize}
+
 
 \chapter{Utilisation du compilateur Yacc}
 
