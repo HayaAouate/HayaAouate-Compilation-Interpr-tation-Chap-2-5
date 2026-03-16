@@ -462,13 +462,92 @@ Modifiez le programme \texttt{dc-elem.c} pour pouvoir effectuer les autres opér
 \textbf{Note :} Commentez les lignes ajoutées et produisez deux ou trois sorties illustratives du programme modifié.
 
 \subsection{Développement}
+L'objectif de cet exercie est de pouvoir rajouté les opérateurs arithmétiques du langage C
+Nous avons modifié le fichier \texttt{dc-elem\_all.c} en intervenant sur trois points clés :
+\begin{itemize}
+    \item \textbf{L'analyseur lexical (\texttt{yylex})} : Ajout des caractères \texttt{'-', '*', '/', '\%'} dans la condition de détection des terminaux.
+    \item \textbf{L'analyseur syntaxique (\texttt{yyparse})} : Mise à jour de la vérification de l'opérateur pour accepter ces nouveaux jetons.
+    \item \textbf{L'unité de calcul} : Implémentation d'une structure \texttt{if...else if} pour exécuter l'opération correspondante, incluant une sécurité pour la division par zéro.
+\end{itemize}
+
+
+
+Voici les commandes pour compiler et tester le programme sous Kali Linux :
+
+\begin{verbatim}
+gcc dc-elem_all.c -o dc-elem_all
+./dc-elem_all
+\end{verbatim}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/chap4/1.png}
+    \caption{Modifications apportées au code source de \texttt{dc-elem\_all.c}}
+    \label{fig:code_modifie}
+\end{figure}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/chap4/2.png}
+    \caption{Modifications apportées au code source de \texttt{dc-elem\_all.c}}
+    \label{fig:code_modifie}
+\end{figure}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/chap4/3.png}
+    \caption{Modifications apportées au code source de \texttt{dc-elem\_all.c}}
+    \label{fig:code_modifie}
+\end{figure}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/chap4/4.png}
+    \caption{Modifications apportées au code source de \texttt{dc-elem\_all.c}}
+    \label{fig:code_modifie}
+\end{figure}
 
 
 \subsubsection*{Code source modifié}
-% Votre code ici
+Dans \texttt{yylex} :
+\begin{verbatim}
+// Ajout des nouveaux opérateurs dans les caractères reconnus
+if (c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '\n' || c == 0)
+    return c;
+\end{verbatim}
+
+Dans \texttt{yyparse} :
+\begin{verbatim}
+// Calcul selon l'opérateur reçu
+if (operation == '+') resultat = gauche + droit;
+else if (operation == '-') resultat = gauche - droit;
+else if (operation == '*') resultat = gauche * droit;
+else if (operation == '/') {
+    if (droit == 0) erreur("division par zero");
+    resultat = gauche / droit;
+}
+else if (operation == '%') {
+    if (droit == 0) erreur("modulo par zero");
+    resultat = gauche % droit;
+}
+\end{verbatim}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/chap4/res_3.png}
+    \caption{Exécution du programme et tests des opérations (Multiplication, Division, Modulo)}
+    \label{fig:tests_4_3}
+\end{figure}
 
 \subsection{Analyse des résultats}
-% Vos observations ici
+
+L'examen des sorties du programme (Figure \ref{fig:tests_4_3}) confirme le bon fonctionnement de l'extension :
+
+\begin{itemize}
+    \item \textbf{Polyvalence} : Le programme traite désormais correctement les soustractions (\texttt{50-10}), multiplications (\texttt{6*7}) et divisions entières.
+    \item \textbf{Le Modulo} : L'opérateur \texttt{\%} renvoie bien le reste de la division euclidienne (ex: \texttt{20 \% 3 = 2}).
+    \item \textbf{Gestion des erreurs} : L'ajout d'un test sur le diviseur nul permet d'éviter un crash du système (\textit{Floating point exception}) en renvoyant une erreur explicite via la fonction \texttt{erreur} et le mécanisme de \texttt{longjmp}.
+    \item \textbf{Lexique} : L'analyseur lexical ignore correctement les espaces et reconnaît les nouveaux opérateurs comme des entités syntaxiques valides.
+\end{itemize}
+
+Ce développement démontre comment une grammaire simple peut être étendue en enrichissant conjointement le dictionnaire de jetons (lexique) et les règles d'interprétation (syntaxe)
 
 
 \section{Exercice 4.11 (À rendre)}
@@ -490,7 +569,38 @@ p : A p B
 \textbf{Note :} Dessinez l’arbre syntaxique avec le logiciel de votre choix et explicitez vos réponses.
 
 \subsection{Développement}
+Cette grammaire est récursive. Le symbole non-terminal \texttt{p} peut se dériver soit en une paire terminale \texttt{A B}, soit s'étendre en entourant un nouveau \texttt{p} par un \texttt{A} à gauche et un \texttt{B} à droite.
+
+\subsubsection*{Génération de phrases}
+En appliquant les règles de dérivation, nous obtenons :
+\begin{itemize}
+    \item \textbf{2 mots} : $p \rightarrow A B$
+    \item \textbf{4 mots} : $p \rightarrow A p B \rightarrow A (A B) B \rightarrow A A B B$
+    \item \textbf{6 mots} : $p \rightarrow A p B \rightarrow A (A p B) B \rightarrow A A (A B) B B \rightarrow A A A B B B$
+    \item \textbf{8 mots} : $p \rightarrow A p B \rightarrow A A A p B B B \rightarrow A A A A B B B B$
+\end{itemize}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap4/shema.jpeg}
+    \caption{Arbre syntaxique pour la phrase "AAABBB" (6 mots)}
+    \label{fig:arbre_syntaxique}
+\end{figure}
+
+\subsubsection*{Définition du langage}
+Le langage décrit par cette grammaire est l'ensemble des mots commençant par un certain nombre de symboles \texttt{A} suivis du \textbf{même nombre} de symboles \texttt{B}. On peut le noter mathématiquement : $L = \{A^n B^n \mid n \geq 1\}$.
+
 \subsection{Analyse des résultats}
+
+\subsubsection*{Expression régulière}
+Il est **impossible** de trouver une expression régulière pour ce langage.
+
+\textbf{Pourquoi ?} 
+Une expression régulière ne peut pas "compter" ou mémoriser un nombre indéfini de caractères. Ici, le langage impose d'avoir **exactement** le même nombre de \texttt{A} et de \texttt{B} ($A^n B^n$). 
+
+\textbf{Conclusion :} 
+Comme un automate fini (utilisé par les expressions régulières) a une mémoire limitée, il ne peut pas vérifier que le compteur de \texttt{A} est égal au compteur de \texttt{B}. C'est pour cela qu'on utilise une \textbf{grammaire hors-contexte} (avec une pile) plutôt qu'une simple expression régulière.
+
 
 \subsection{Exercice 4.12 (Au choix — À rendre)}
 \subsection{Question}
@@ -505,9 +615,126 @@ p : A p B p
 \begin{itemize}
     \item (Idem) Générez à partir de cette grammaire toutes les phrases de 2 mots, de 4 mots, de 6 mots.
 \end{itemize}
+La grammaire est un peu plus "libre" que la précédente. Elle permet non seulement d'imbriquer les lettres (les unes dans les autres), mais aussi de les mettre les unes après les autres (juxtaposition). C'est le principe des parenthèses bien formées : chaque \texttt{A} ouvert doit être fermé par un \texttt{B}.
 
+\subsubsection*{Génération des phrases}
+
+En remplaçant les \texttt{p} soit par "rien", soit par la règle \texttt{A p B p}, on obtient :
+
+\begin{itemize}
+    \item \textbf{2 mots (1 seule possibilité)} :
+    \begin{itemize}
+        \item \textbf{AB} (on a remplacé les deux \texttt{p} par rien).
+    \end{itemize}
+
+    \item \textbf{4 mots (2 possibilités)} :
+    \begin{itemize}
+        \item \textbf{AABB} (on a mis un bloc à l'intérieur).
+        \item \textbf{ABAB} (on a mis deux blocs à la suite).
+    \end{itemize}
+
+    \item \textbf{6 mots (5 possibilités)} :
+    \begin{itemize}
+        \item \textbf{AAABBB} (tout est imbriqué).
+        \item \textbf{AABABB} (un bloc suivi d'un petit, le tout dans un grand).
+        \item \textbf{AABBAA} (impossible ici, car l'ordre impose \texttt{B} après \texttt{A}).
+        \item En réalité, on trouve : \textbf{AAABBB}, \textbf{AABABB}, \textbf{ABAABB}, \textbf{AABBAB} et \textbf{ABABAB}. 
+    \end{itemize}
+\end{itemize}
+
+\subsection{Analyse des résultats}
+
+La grosse différence avec l'exercice d'avant, c'est que le \texttt{p} à la fin de la règle (\texttt{A p B \textbf{p}}) permet de recommencer une séquence après avoir fermé la première. C'est pour ça qu'on peut avoir des phrases comme \texttt{ABAB}. 
+Finalement cette grammaire génère tous les schémas de parenthèses qui se ferment correctement. Plus on augmente le nombre de mots, plus il y a de combinaisons possibles
 
 \chapter{Utilisation du compilateur Yacc}
+\section*{Introduction}
+Pour ce cinquième chapitre sur Yacc et Bison, vous devez rendre les exercices 5.2 et 5.3 et un exercice au choix parmi les deux présentés. L’exercice
+5.6 est pour un Bonus.
+
+\section {Exercice 5.2 (A rendre)}
+\subsection{Question}
+Modifiez la fonction \texttt{parenthese} (cf. code \texttt{1-calc.y}) pour qu’elle n’imprime que les parenthèses nécessaires. Expliquez votre démarche.
+
+\paragraph{Exemples attendus :}
+\begin{verbatim}
+(1)             -> 1
+((1))           -> 1
+(1 + (2 + 3))   -> 1 + 2 + 3
+((1 + 2) + 3)   -> 1 + 2 + 3
+1 + (2 * 3)     -> 1 + 2 * 3
+1 * (2 + 3)     -> 1 * (2 + 3)
+\end{verbatim}
+
+\subsection{Développement}  
+Pour résoudre cet exercice et gérer l'affichage intelligent des parenthèses, nous avons dû passer d'une évaluation directe (calcul immédiat) à une approche basée sur un \textbf{Arbre de Syntaxe Abstraite (AST)}. 
+
+En effet, pour savoir si une parenthèse est nécessaire, il ne suffit pas de connaître la valeur d'une sous-expression, il faut connaître sa structure et l'opérateur qui la lie à son parent. L'AST permet de conserver cette hiérarchie. Chaque nœud de l'arbre représente soit un nombre, soit un opérateur avec ses deux fils (gauche et droit). 
+
+
+\subsection{Compilation et Exécution}
+\begin{verbatim}
+    On lance le code avec gcc 1-calc-reecriture.c -o 1-calc-reecriture
+    puis: ./1-calc-reecriture
+\end{verbatim}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/cmdcompilation.png}
+    \caption{Extrait du code source de la commande de compilation}
+    \label{fig:cmdcompilation}
+\end{figure}
+
 
 \section{Code et Explications}
-% Votre réponse ici
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/image1.png}
+    \caption{Extrait du code source de 1-calc-reecriture.c}
+    \label{fig:code_1-calc-reecriture}
+\end{figure}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/image2.png}
+    \caption{Extrait du code source de 1-calc-reecriture.c}
+    \label{fig:code_1-calc-reecriture}
+\end{figure}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/image3.png}
+    \caption{Extrait du code source de 1-calc-reecriture.c}
+    \label{fig:code_1-calc-reecriture}
+\end{figure}
+
+\subsection{Explications}
+L'algorithme de réécriture repose sur la comparaison des priorités entre un nœud parent et ses nœuds fils lors d'un parcours récursif de l'arbre.
+
+\begin{itemize}
+    \item \textbf{Gestion des priorités :} Nous avons défini une fonction \texttt{priorite()} qui attribue une valeur numérique à chaque opérateur (ex: 2 pour \texttt{*} et \texttt{/}, 1 pour \texttt{+} et \texttt{-}). 
+    \item \textbf{Parcours récursif :} La fonction \texttt{afficher\_intelligent()} parcourt l'arbre. Pour chaque nœud, elle vérifie si la priorité du fils est inférieure à celle du parent. Si c'est le cas, elle entoure l'affichage du fils par des parenthèses.
+    \item \textbf{Cas particulier de l'associativité :} Pour les opérateurs comme la soustraction (\texttt{-}) et la division (\texttt{/}), l'ordre des opérations est crucial. Par exemple, $1 - (2 - 3)$ n'est pas égal à $1 - 2 - 3$. L'algorithme détecte si le fils droit a la même priorité que le parent pour ces opérateurs spécifiques et impose des parenthèses afin d'éviter une modification du sens mathématique de l'expression.
+\end{itemize}
+
+\subsection{Conclusion}
+L'implémentation de cet affichage "intelligent" démontre l'importance de l'AST dans la conception d'un compilateur. Au-delà du simple calcul, la structure en arbre permet d'effectuer des transformations symboliques et de la réécriture de code. Cette technique est à la base des outils de "pretty-printing" et de refactorisation automatique, où l'on cherche à produire un code source à la fois correct syntaxiquement et lisible pour l'humain.
+
+\section{Exercice 5.3 (A rendre)}
+\subsection{Question}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/quest5-4.png}
+    \caption{consignes de l'exercice 5.4}
+    \label{fig:consignes_5-4}
+\end{figure}
+
+
+
+\section{Exercice 5.5 (Au choix — À rendre)}
+\subsection{Question}
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/chap5/quest5-5.png}
+    \caption{consignes de l'exercice 5.5}
+    \label{fig:consignes_5-5}
+\end{figure}
